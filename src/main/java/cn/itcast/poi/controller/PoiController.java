@@ -3,6 +3,8 @@ package cn.itcast.poi.controller;
 import cn.itcast.poi.pojo.CoursePlan;
 import cn.itcast.poi.service.CoursePlanService;
 import cn.itcast.poi.utils.FileUtils;
+import cn.itcast.poi.utils.ImageUtils;
+import cn.itcast.poi.utils.VerifyImageUtil;
 import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
@@ -21,12 +23,11 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.io.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @Controller
 public class PoiController {
@@ -132,4 +133,41 @@ public class PoiController {
         response.getWriter().println("上传成功");
         return;
     }
+
+    @RequestMapping(value = "/code",method = RequestMethod.GET)
+    public void getImageCode(HttpServletRequest request,HttpServletResponse response) throws IOException {
+        response.setContentType("image/jpeg");
+        //禁止图像缓存
+        response.setHeader("Pragma","no-cache");
+        response.setHeader("Cache-Control", "no-cache");
+        response.setDateHeader("Expires", 0);
+        ImageUtils imageUtil = new ImageUtils();
+        imageUtil.getRandCode(request,response);
+    }
+
+    /**
+     * @param @return 参数说明
+     * @return BaseRestResult 返回类型
+     * @Description: 生成滑块拼图验证码
+     */
+    @RequestMapping(value = "/getImageVerifyCode", method = RequestMethod.GET)
+    @ResponseBody
+    public Map<String,Object> getImageVerifyCode(HttpServletRequest request) {
+        Map<String, Object> resultMap = new HashMap<>();
+        //读取本地路径下的图片,随机选一条
+//        File file = new File(this.getClass().getResource("/image").getPath());
+//        File[] files = file.listFiles();
+//        int n = new Random().nextInt(files.length);
+//        File imageUrl = files[n];
+        File imageUrl=new File("C:/Users/pf/Desktop/cs/01.jpg");
+        VerifyImageUtil.createImage(imageUrl, resultMap);
+        //读取网络图片
+        //ImageUtil.createImage("http://hbimg.b0.upaiyun.com/7986d66f29bfeb6015aaaec33d33fcd1d875ca16316f-2bMHNG_fw658",resultMap);
+        request.getSession().setAttribute("xWidth", resultMap.get("xWidth"));
+        resultMap.remove("xWidth");
+        resultMap.put("errcode", 0);
+        resultMap.put("errmsg", "success");
+        return resultMap;
+    }
+
 }
